@@ -3,7 +3,7 @@ numpy
 faiss-cpu
 sentence-transformers
 transformers
-torch==2.12.0
+torch
 torchvision
 langchain
 langchain-community
