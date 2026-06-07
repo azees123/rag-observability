@@ -1,0 +1,31 @@
+Artificial Intelligence (AI) is a field of computer science focused on creating systems that can perform tasks that normally require human intelligence. These tasks include reasoning, learning, problem-solving, perception, and language understanding. AI is widely used in virtual assistants, recommendation systems, robotics, healthcare, and autonomous systems.
+
+Machine Learning (ML) is a subset of Artificial Intelligence that enables systems to learn patterns from data without being explicitly programmed. ML models improve their performance as they are trained on more data. The main types of machine learning are supervised learning, unsupervised learning, and reinforcement learning.
+
+Supervised learning is a type of machine learning where models are trained using labeled data. Each input has a corresponding correct output. Common algorithms include linear regression, logistic regression, decision trees, random forests, and support vector machines.
+
+Unsupervised learning deals with unlabeled data and is used to discover hidden patterns or structures in data. Common techniques include clustering methods like K-means clustering and hierarchical clustering.
+
+Reinforcement learning is a learning method where an agent interacts with an environment and learns by receiving rewards or penalties. It is widely used in robotics, gaming, and autonomous systems.
+
+Deep Learning (DL) is a subset of machine learning that uses artificial neural networks with multiple layers. Deep learning models are highly effective in image recognition, speech recognition, and natural language processing.
+
+Neural networks are computational models inspired by the human brain. They consist of layers of interconnected nodes called neurons. Each connection has weights that are adjusted during training to minimize error.
+
+Convolutional Neural Networks (CNNs) are specialized neural networks used for processing image data. They are commonly used in object detection, face recognition, and medical imaging.
+
+Recurrent Neural Networks (RNNs) are designed for sequential data such as time series, speech, and text. Long Short-Term Memory (LSTM) networks are an improved version of RNNs that solve the vanishing gradient problem.
+
+Transformers are advanced deep learning models that use self-attention mechanisms to process input data efficiently. They are the foundation of modern large language models such as GPT.
+
+Overfitting occurs when a machine learning model performs well on training data but poorly on new unseen data. Underfitting occurs when a model is too simple to capture underlying patterns in the data.
+
+Gradient descent is an optimization algorithm used to minimize the loss function by adjusting model parameters iteratively in the direction of the steepest descent.
+
+Artificial Intelligence is widely applied in healthcare for disease prediction, in finance for fraud detection, in e-commerce for recommendation systems, and in transportation for autonomous vehicles.
+
+The future of AI includes advancements in generative AI, large language models, multimodal AI systems, robotics, and artificial general intelligence (AGI).
+
+Machine learning pipelines consist of several stages including data collection, data preprocessing, feature engineering, model training, model evaluation, and deployment.
+
+MLOps is a set of practices used to manage the machine learning lifecycle. It includes model versioning, continuous integration, deployment, monitoring, and retraining of models in production environments.

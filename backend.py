@@ -1,0 +1,137 @@
+import os
+import time
+import uuid
+import numpy as np
+
+from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
+
+# ---------------- DATA ----------------
+os.makedirs("data", exist_ok=True)
+
+file_path = "data/About_Ai.txt"
+
+if not os.path.exists(file_path):
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write("AI ML DL fundamentals and applications in real world systems.")
+
+loader = TextLoader(file_path)
+docs = loader.load()
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,
+    chunk_overlap=100
+)
+
+chunks = splitter.split_documents(docs)
+
+# ---------------- VECTOR DB ----------------
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
+
+db = FAISS.from_documents(chunks, embeddings)
+retriever = db.as_retriever(search_kwargs={"k": 4})
+
+# ---------------- METRICS ----------------
+METRICS = {
+    "latencies": [],
+    "costs": [],
+    "tokens": [],
+    "quality": []
+}
+
+TRACE_LOGS = []
+
+def create_trace_id():
+    return str(uuid.uuid4())
+
+# ---------------- LAZY LLM (IMPORTANT) ----------------
+llm = None
+
+def get_llm():
+    global llm
+    if llm is None:
+        from transformers import pipeline
+        from langchain_community.llms import HuggingFacePipeline
+
+        pipe = pipeline(
+            "text-generation",
+            model="Qwen/Qwen2.5-1.5B-Instruct",
+            max_new_tokens=256,
+            temperature=0.2,
+            do_sample=False
+        )
+
+        llm = HuggingFacePipeline(pipeline=pipe)
+
+    return llm
+
+# ---------------- QUALITY ----------------
+from sentence_transformers import util
+
+def retrieval_quality(question, docs):
+    q_emb = embeddings.embed_query(question)
+
+    scores = []
+    for d in docs:
+        d_emb = embeddings.embed_query(d.page_content)
+        scores.append(util.cos_sim(q_emb, d_emb).item())
+
+    return max(scores)
+
+# ---------------- MAIN RAG ----------------
+def rag_chain(question):
+
+    trace_id = create_trace_id()
+    start_time = time.perf_counter()
+
+    docs = retriever.invoke(question)
+
+    if not docs:
+        return "I don't know"
+
+    context = "\n\n".join([d.page_content for d in docs])
+
+    quality = retrieval_quality(question, docs)
+
+    prompt = f"""
+Use ONLY context.
+
+Context:
+{context}
+
+Question: {question}
+
+Answer:
+"""
+
+    llm_local = get_llm()
+    answer = llm_local.invoke(prompt)
+
+    latency = time.perf_counter() - start_time
+
+    tokens = len(prompt.split()) + len(answer.split())
+    cost = (tokens / 1_000_000) * 0.07
+
+    METRICS["latencies"].append(latency)
+    METRICS["costs"].append(cost)
+    METRICS["tokens"].append(tokens)
+    METRICS["quality"].append(quality)
+
+    TRACE_LOGS.append({
+        "trace_id": trace_id,
+        "question": question,
+        "answer": answer,
+        "latency": latency,
+        "cost": cost,
+        "tokens": tokens,
+        "quality": quality
+    })
+
+    return answer
+
+if __name__ == "__main__":
+    pass
