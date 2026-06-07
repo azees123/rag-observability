@@ -60,7 +60,7 @@ def get_llm():
         # Keep the raw Hugging Face pipeline clean
         pipe = pipeline(
             "text-generation",
-            model="Qwen/Qwen2.5-1.5B-Instruct"
+            model="Qwen/Qwen2.5-0.5B-Instruct"
         )
 
         # Pass parameters cleanly through pipeline_kwargs
