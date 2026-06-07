@@ -54,24 +54,26 @@ llm = None
 def get_llm():
     global llm
     if llm is None:
-        from transformers import pipeline, GenerationConfig
+        from transformers import pipeline
         from langchain_huggingface import HuggingFacePipeline
 
-        gen_config = GenerationConfig(
-            max_new_tokens=256,
-            temperature=0.2,
-            do_sample=False,
-            eos_token_id=25100,
-            pad_token_id=25100
-        )
-
+        # Keep the raw Hugging Face pipeline clean
         pipe = pipeline(
             "text-generation",
-            model="Qwen/Qwen2.5-1.5B-Instruct",
-            generation_config=gen_config
+            model="Qwen/Qwen2.5-1.5B-Instruct"
         )
 
-        llm = HuggingFacePipeline(pipeline=pipe)
+        # Pass parameters cleanly through pipeline_kwargs
+        llm = HuggingFacePipeline(
+            pipeline=pipe,
+            pipeline_kwargs={
+                "max_new_tokens": 256,
+                "temperature": 0.2,
+                "do_sample": False,
+                "eos_token_id": 25100,
+                "pad_token_id": 25100
+            }
+        )
 
     return llm
 
