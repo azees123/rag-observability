@@ -6,7 +6,7 @@ import numpy as np
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 # ---------------- DATA ----------------
 os.makedirs("data", exist_ok=True)
@@ -48,21 +48,27 @@ TRACE_LOGS = []
 def create_trace_id():
     return str(uuid.uuid4())
 
-# ---------------- LAZY LLM (IMPORTANT) ----------------
+# ---------------- LLM ----------------
 llm = None
 
 def get_llm():
     global llm
     if llm is None:
-        from transformers import pipeline
-        from langchain_community.llms import HuggingFacePipeline
+        from transformers import pipeline, GenerationConfig
+        from langchain_huggingface import HuggingFacePipeline
+
+        gen_config = GenerationConfig(
+            max_new_tokens=256,
+            temperature=0.2,
+            do_sample=False,
+            eos_token_id=25100,
+            pad_token_id=25100
+        )
 
         pipe = pipeline(
             "text-generation",
             model="Qwen/Qwen2.5-1.5B-Instruct",
-            max_new_tokens=256,
-            temperature=0.2,
-            do_sample=False
+            generation_config=gen_config
         )
 
         llm = HuggingFacePipeline(pipeline=pipe)
@@ -80,7 +86,7 @@ def retrieval_quality(question, docs):
         d_emb = embeddings.embed_query(d.page_content)
         scores.append(util.cos_sim(q_emb, d_emb).item())
 
-    return max(scores)
+    return max(scores) if scores else 0.0
 
 # ---------------- MAIN RAG ----------------
 def rag_chain(question):
@@ -97,16 +103,14 @@ def rag_chain(question):
 
     quality = retrieval_quality(question, docs)
 
-    prompt = f"""
-Use ONLY context.
+    prompt = f"""Use ONLY context.
 
 Context:
 {context}
 
 Question: {question}
 
-Answer:
-"""
+Answer:"""
 
     llm_local = get_llm()
     answer = llm_local.invoke(prompt)
@@ -128,7 +132,8 @@ Answer:
         "latency": latency,
         "cost": cost,
         "tokens": tokens,
-        "quality": quality
+        "quality": quality,
+        "context_used": context
     })
 
     return answer
