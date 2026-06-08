@@ -36,7 +36,7 @@ if st.button("Run Pipeline", type="primary"):
                 "trace": latest_global_trace
             })
 
-        # ---------------- 🚦 CI REGRESSION (ADDED ONLY HERE) ----------------
+        # ---------------- CI REGRESSION ----------------
         try:
             ci_regression()
             st.success("CI REGRESSION PASSED")
