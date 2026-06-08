@@ -105,7 +105,11 @@ def rag_chain(question):
 
     quality = retrieval_quality(question, docs)
 
-    prompt = f"""Use ONLY context.
+    prompt = f"""
+Use ONLY the context below.
+
+If the answer is not in context, say:
+"I don't know based on the given context."
 
 Context:
 {context}
