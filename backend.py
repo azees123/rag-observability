@@ -106,10 +106,16 @@ def rag_chain(question):
     quality = retrieval_quality(question, docs)
 
     prompt = f"""
-Use ONLY the context below.
+You are a strict RAG system.
 
-If the answer is not in context, say:
-"I don't know based on the given context."
+RULES:
+- Use ONLY the context below.
+- If answer is not in context, output EXACTLY:
+  I don't know based on the given context.
+- Do NOT add any extra text.
+- Do NOT explain anything.
+- Do NOT act like an assistant.
+- Output only the final answer.
 
 Context:
 {context}
