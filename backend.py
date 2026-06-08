@@ -57,13 +57,11 @@ def get_llm():
         from transformers import pipeline
         from langchain_huggingface import HuggingFacePipeline
 
-        # Keep the raw Hugging Face pipeline clean
         pipe = pipeline(
             "text-generation",
             model="Qwen/Qwen2.5-0.5B-Instruct"
         )
 
-        # Pass parameters cleanly through pipeline_kwargs
         llm = HuggingFacePipeline(
             pipeline=pipe,
             pipeline_kwargs={
