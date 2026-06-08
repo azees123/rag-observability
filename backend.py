@@ -107,8 +107,14 @@ def rag_chain(question):
     context = "\n\n".join([d.page_content for d in docs])
 
     prompt = f"""
-You are an AI assistant. Use ONLY the provided context to answer.
-If the answer is not in the context, say "I don't know".
+You are a strict AI assistant.
+
+RULES:
+- Use ONLY the context
+- If not found, say exactly: I don't know
+- DO NOT explain anything
+- DO NOT add extra text
+- Output must be ONLY the final answer (one line)
 
 Context:
 {context}
