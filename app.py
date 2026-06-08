@@ -24,15 +24,7 @@ if st.button("Run Pipeline", type="primary"):
         with st.spinner("Running RAG pipeline..."):
             ans = rag_chain(query)
 
-            if len(TRACE_LOGS) > 0:
-                latest_global_trace = TRACE_LOGS[-1]
-            else:
-                latest_global_trace = {
-                    "latency": 0,
-                    "cost": 0,
-                    "quality": 0,
-                    "trace_id": "N/A"
-                }
+            latest_global_trace = TRACE_LOGS[-1]
 
             st.session_state["session_latencies"].append(latest_global_trace["latency"])
             st.session_state["session_costs"].append(latest_global_trace["cost"])
