@@ -140,5 +140,33 @@ Answer:"""
 
     return answer
 
+# ----------------  CI REGRESSION ----------------
+
+test_cases = [
+    ("What is Artificial Intelligence?", "intelligence"),
+    ("What is Machine Learning?", "learning"),
+    ("What is Deep Learning?", "neural")
+]
+
+def ci_regression():
+    failures = 0
+
+    for q, keyword in test_cases:
+        ans = rag_chain(q)
+
+        if keyword.lower() not in ans.lower():
+            failures += 1
+
+    failure_rate = failures / len(test_cases)
+
+    print("\n--- CI REGRESSION RESULT ---")
+    print("FAILURE RATE:", failure_rate)
+
+    if failure_rate > 0.3:
+        raise Exception("REGRESSION FAILED")
+    else:
+        print("REGRESSION PASSED")
+
+
 if __name__ == "__main__":
-    pass
+    ci_regression()
