@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-from backend import rag_chain, METRICS, TRACE_LOGS
+from backend import rag_chain, METRICS, TRACE_LOGS, ci_regression
 
 # ---------------- CONFIGURATION ----------------
 st.set_page_config(page_title="RAG Dashboard", layout="wide")
@@ -23,17 +23,26 @@ if st.button("Run Pipeline", type="primary"):
     if query.strip():
         with st.spinner("Running RAG pipeline..."):
             ans = rag_chain(query)
+
             latest_global_trace = TRACE_LOGS[-1]
-            
+
             st.session_state["session_latencies"].append(latest_global_trace["latency"])
             st.session_state["session_costs"].append(latest_global_trace["cost"])
             st.session_state["session_quality"].append(latest_global_trace["quality"])
-            
+
             st.session_state["user_history"].append({
                 "query": query,
                 "answer": ans,
                 "trace": latest_global_trace
             })
+
+        # ---------------- 🚦 CI REGRESSION (ADDED ONLY HERE) ----------------
+        try:
+            ci_regression()
+            st.success("CI REGRESSION PASSED")
+        except Exception as e:
+            st.error(f"CI REGRESSION FAILED: {str(e)}")
+
         st.success("Execution complete!")
 
 # ---------------- INTERFACE TABS ----------------
