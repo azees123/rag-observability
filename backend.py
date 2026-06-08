@@ -57,11 +57,13 @@ def get_llm():
         from transformers import pipeline
         from langchain_huggingface import HuggingFacePipeline
 
+        # Keep the raw Hugging Face pipeline clean
         pipe = pipeline(
             "text-generation",
             model="Qwen/Qwen2.5-0.5B-Instruct"
         )
 
+        # Pass parameters cleanly through pipeline_kwargs
         llm = HuggingFacePipeline(
             pipeline=pipe,
             pipeline_kwargs={
@@ -99,22 +101,11 @@ def rag_chain(question):
     if not docs:
         return "I don't know"
 
-    quality = retrieval_quality(question, docs)
-
-    if quality < 0.30:
-        return "I don't know"
-
     context = "\n\n".join([d.page_content for d in docs])
 
-    prompt = f"""
-You are a strict AI assistant.
+    quality = retrieval_quality(question, docs)
 
-RULES:
-- Use ONLY the context
-- If not found, say exactly: I don't know
-- DO NOT explain anything
-- DO NOT add extra text
-- Output must be ONLY the final answer (one line)
+    prompt = f"""Use ONLY context.
 
 Context:
 {context}
@@ -149,7 +140,7 @@ Answer:"""
 
     return answer
 
-# ---------------- CI REGRESSION ----------------
+# ----------------  CI REGRESSION ----------------
 
 test_cases = [
     ("What is Artificial Intelligence?", "intelligence"),
@@ -163,7 +154,7 @@ def ci_regression():
     for q, keyword in test_cases:
         ans = rag_chain(q)
 
-        if ans is None or keyword.lower() not in ans.lower():
+        if keyword.lower() not in ans.lower():
             failures += 1
 
     failure_rate = failures / len(test_cases)
