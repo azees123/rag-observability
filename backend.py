@@ -85,14 +85,29 @@ def retrieval_quality(question, docs):
 
     return max(scores) if scores else 0.0
 
-# ---------------- CLEAN ANSWER ----------------
-def clean_answer(text):
-    text = str(text).strip()
+# ---------------- CLEAN OUTPUT (IMPORTANT FIX) ----------------
+def clean_output(prompt, raw):
 
-    if "Question:" in text:
-        text = text.split("Question:")[0]
+    # -------- extract text safely --------
+    if isinstance(raw, dict):
+        text = raw.get("text", "")
+    elif isinstance(raw, list):
+        text = raw[0].get("generated_text", "")
+    else:
+        text = str(raw)
 
-    return text.strip()
+    answer = text
+
+    # -------- remove prompt leakage --------
+    if prompt in answer:
+        answer = answer.replace(prompt, "")
+
+    # -------- strong cleanup --------
+    for stop in ["Context:", "Question:", "Rules:", "Answer:"]:
+        if stop in answer:
+            answer = answer.split(stop)[0]
+
+    return answer.strip()
 
 # ---------------- MAIN RAG ----------------
 def rag_chain(question):
@@ -114,7 +129,7 @@ def rag_chain(question):
 
 Rules:
 - Answer ONLY using context
-- If not in context, say "I don't know"
+- If answer is not in context, say "I don't know"
 - No explanation
 
 Context:
@@ -127,16 +142,17 @@ Answer:"""
     llm_local = get_llm()
     raw = llm_local.invoke(prompt)
 
-    # CLEAN OUTPUT
-    answer = clean_answer(raw)
+    # FINAL CLEAN ANSWER
+    answer = clean_output(prompt, raw)
 
+    # fallback rules
     if len(answer.strip()) == 0 or quality < 0.3:
         answer = "I don't know"
 
     latency = time.perf_counter() - start_time
 
     tokens = len(prompt.split()) + len(answer.split())
-    cost = 0  # local model
+    cost = 0
 
     METRICS["latencies"].append(latency)
     METRICS["costs"].append(cost)
