@@ -67,12 +67,9 @@ def get_llm():
             pipeline_kwargs={
                 "max_new_tokens": 256,
                 "temperature": 0.2,
-                "do_sample": False,
-                "eos_token_id": 25100,
-                "pad_token_id": 25100
+                "do_sample": False
             }
         )
-
     return llm
 
 # ---------------- QUALITY ----------------
@@ -88,6 +85,30 @@ def retrieval_quality(question, docs):
 
     return max(scores) if scores else 0.0
 
+# ---------------- CLEAN OUTPUT (IMPORTANT FIX) ----------------
+def clean_output(prompt, raw):
+
+    # -------- extract text safely --------
+    if isinstance(raw, dict):
+        text = raw.get("text", "")
+    elif isinstance(raw, list):
+        text = raw[0].get("generated_text", "")
+    else:
+        text = str(raw)
+
+    answer = text
+
+    # -------- remove prompt leakage --------
+    if prompt in answer:
+        answer = answer.replace(prompt, "")
+
+    # -------- strong cleanup --------
+    for stop in ["Context:", "Question:", "Rules:", "Answer:"]:
+        if stop in answer:
+            answer = answer.split(stop)[0]
+
+    return answer.strip()
+
 # ---------------- MAIN RAG ----------------
 def rag_chain(question):
 
@@ -99,11 +120,17 @@ def rag_chain(question):
     if not docs:
         return "I don't know"
 
-    context = "\n\n".join([d.page_content for d in docs])
+    context = "\n\n".join([d.page_content[:500] for d in docs])
 
     quality = retrieval_quality(question, docs)
 
-    prompt = f"""Use ONLY context.
+    # STRICT PROMPT
+    prompt = f"""You are a strict QA system.
+
+Rules:
+- Answer ONLY using context
+- If answer is not in context, say "I don't know"
+- No explanation
 
 Context:
 {context}
@@ -113,12 +140,19 @@ Question: {question}
 Answer:"""
 
     llm_local = get_llm()
-    answer = llm_local.invoke(prompt)
+    raw = llm_local.invoke(prompt)
+
+    # FINAL CLEAN ANSWER
+    answer = clean_output(prompt, raw)
+
+    # fallback rules
+    if len(answer.strip()) == 0 or quality < 0.3:
+        answer = "I don't know"
 
     latency = time.perf_counter() - start_time
 
     tokens = len(prompt.split()) + len(answer.split())
-    cost = (tokens / 1_000_000) * 0.07
+    cost = 0
 
     METRICS["latencies"].append(latency)
     METRICS["costs"].append(cost)
@@ -138,8 +172,7 @@ Answer:"""
 
     return answer
 
-# ----------------  CI REGRESSION ----------------
-
+# ---------------- CI REGRESSION ----------------
 test_cases = [
     ("What is Artificial Intelligence?", "intelligence"),
     ("What is Machine Learning?", "learning"),
