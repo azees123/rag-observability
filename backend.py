@@ -152,7 +152,7 @@ Answer:"""
     latency = time.perf_counter() - start_time
 
     tokens = len(prompt.split()) + len(answer.split())
-    cost = (tokens / 1_000_000) * 0.07
+    cost = (tokens / 1_000_000) * 0.02
 
     METRICS["latencies"].append(latency)
     METRICS["costs"].append(cost)
