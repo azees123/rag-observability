@@ -104,7 +104,12 @@ def clean_output(prompt, raw):
         if stop in answer:
             answer = answer.split(stop)[0]
 
-    return answer.strip()
+    answer = answer.strip()
+
+    if "I don't know" in answer and len(answer.replace("I don't know", "").strip()) > 0:
+        answer = answer.replace("I don't know", "").strip()
+
+    return answer
 
 # ---------------- MAIN RAG ----------------
 def rag_chain(question):
